@@ -50,7 +50,7 @@ node n2 {
     labelcoords {362.0 150.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n3}
-    services {IPForward}
+    services {UserDefined}
 }
 
 node n3 {

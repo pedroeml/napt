@@ -11,7 +11,7 @@
     <device id="2" name="n2" type="host" class="" image="">
       <position x="362" y="118" lat="47.578094109180036" lon="-122.12744414800721" alt="2.0"/>
       <services>
-        <service name="IPForward"/>
+        <service name="UserDefined"/>
       </services>
     </device>
     <device id="3" name="n3" type="host" class="" image="">
