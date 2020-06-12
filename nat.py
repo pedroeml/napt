@@ -8,6 +8,19 @@ ETH1_NETWORK = '10.0.1.'
 ETH0_IP_ADDR = ETH0_NETWORK + '11'
 ETH1_IP_ADDR = ETH1_NETWORK + '10'
 
+ETH0_HOSTS = {
+    '10.0.0.10': {
+        'mac': b'\x00\x00\x00\xaa\x00\x00',
+        'private_port': None,
+        'public_port': 6001
+    },
+    '10.0.0.12': {
+        'mac': b'\x00\x00\x00\xaa\x00\x04',
+        'private_port': None,
+        'public_port': 6002
+    }
+}
+
 
 def bytes_to_mac(bytesmac):
     return ':'.join('{:02x}'.format(x) for x in bytesmac)
@@ -100,7 +113,7 @@ def tcp(packet, ip_saddr, ip_daddr):
     tcp_header = struct.pack("!HHLLBBHHH", tcp_sport, tcp_dport, tcp_seq, tcp_ack, tcp_hl_r, tcp_flags,
         tcp_wsize, tcp_check, tcp_urgptr)
 
-    tcp_pseudo_header = struct.pack("!4s4sBBH", ip_saddr, ip_daddr, tcp_check, socket.IPPROTO_TCP, len(tcp_header))
+    tcp_pseudo_header = struct.pack("!4s4sBBH", ip_saddr, ip_daddr, tcp_check, socket.IPPROTO_TCP, len(tcp_header + data))
 
     tcp_check = checksum(tcp_pseudo_header + tcp_header + data)
 
@@ -151,7 +164,7 @@ while inputs:
 
         nexthdr = packet[ETH_LENGTH:]
 
-        if protocol == 2048: # IP
+        if protocol == 2048:
             if s is s0:
                 dest_mac = b'\x00\x00\x00\xaa\x00\x03'
                 source_mac = eth1_mac_addr
@@ -160,9 +173,10 @@ while inputs:
                 (ip_header, ip_proto, ip_saddr, ip_daddr) = pack_ip_header(packet, ETH1_IP_ADDR, None)
                 s1.send(eth_hdr + ip_header + process_packet(packet, ip_proto, ip_saddr, ip_daddr))
             elif s is s1 and not is_dest_ip_private(packet):
-                dest_mac = b'\x00\x00\x00\xaa\x00\x00'
+                host_n1 = ETH0_NETWORK + '10'
+                dest_mac = ETH0_HOSTS[host_n1]['mac']
                 source_mac = eth0_mac_addr
 
                 eth_hdr = struct.pack('!6s6sH', dest_mac, source_mac, protocol)
-                (ip_header, ip_proto, ip_saddr, ip_daddr) = pack_ip_header(packet, None, ETH0_NETWORK + '10')
+                (ip_header, ip_proto, ip_saddr, ip_daddr) = pack_ip_header(packet, None, host_n1)
                 s0.send(eth_hdr + ip_header + process_packet(packet, ip_proto, ip_saddr, ip_daddr))
